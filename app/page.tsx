@@ -103,18 +103,23 @@ export default function Home() {
             transition={{ duration: 1 }}
             className="relative"
           >
-            <div className="bg-white p-6 rounded-[3rem] shadow-2xl border border-brand-border rotate-3 hover:rotate-0 transition-transform duration-700">
-              <div className="rounded-[2rem] overflow-hidden aspect-square">
-                <Image 
-                  src="https://lexpuzcbixulwfchrpym.supabase.co/storage/v1/object/public/post-images/Design%20sem%20nome.png" 
-                  alt="AI Visualization" 
-                  width={800} 
-                  height={800} 
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
+            
+            <div className="relative flex justify-center">
+              {/* Adicionei max-w-md para diminuir o tamanho manualmente */}
+              <div className="bg-white p-6 rounded-[3rem] shadow-2xl border border-brand-border rotate-3 hover:rotate-0 transition-transform duration-700 w-full max-w-md mx-auto">
+                <div className="rounded-[2rem] overflow-hidden aspect-square">
+                  <Image 
+                    src="https://lexpuzcbixulwfchrpym.supabase.co/storage/v1/object/public/post-images/Design%20sem%20nome.png" 
+                    alt="Logo DataLab" 
+                    width={800} 
+                    height={800} 
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
               </div>
             </div>
+
             {/* Elemento flutuante de badge */}
             <div className="absolute -bottom-6 -left-6 glass p-6 rounded-3xl border border-white max-w-[200px] shadow-2xl hidden md:block">
               <p className="text-[10px] font-black uppercase tracking-widest text-brand-accent mb-2">Impacto Real</p>
@@ -171,11 +176,11 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-16 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
               <Image 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/DataCamp_Logo.png/640px-DataCamp_Logo.png" 
+                src="https://lexpuzcbixulwfchrpym.supabase.co/storage/v1/object/public/post-images/datacamp-icon.png" 
                 alt="DataCamp Logo" 
                 width={140} 
                 height={50} 
-                className="h-10 w-auto object-contain brightness-0"
+                className="h-10 w-auto object-contain"
                 referrerPolicy="no-referrer"
               />
               <div className="text-3xl font-black tracking-tighter text-black/40">UFU.BR</div>
