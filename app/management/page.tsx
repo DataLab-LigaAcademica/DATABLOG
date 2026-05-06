@@ -29,15 +29,11 @@ const MOCK_STATS = [
   { label: 'Compartilhamentos', value: '12.4k', change: '+18.9%', icon: ExternalLink },
 ];
 
-const MOCK_POSTS = [
-  { id: '1', title: 'Arquitetura de Bancos de Dados Vetoriais', author: 'Alex Rivera', status: 'Publicado', date: '12 Nov, 2024', engagement: '94/100' },
-  { id: '2', title: 'Entendendo LLM Quantization', author: 'Sarah Chen', status: 'Rascunho', date: '18 Nov, 2024', engagement: 'N/A' },
-  { id: '3', title: 'O Futuro do Armazenamento Descentralizado', author: 'Mark Thompson', status: 'Publicado', date: '08 Nov, 2024', engagement: '78/100' },
-];
-
 export default function ManagementPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNewPostModal, setShowNewPostModal] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-brand-bg flex">
@@ -81,7 +77,7 @@ export default function ManagementPage() {
           <div className="flex items-center gap-4 p-4 bg-brand-bg rounded-[2rem] border border-brand-border">
             <div className="w-10 h-10 rounded-xl bg-brand-text flex items-center justify-center font-black text-white text-xs">AR</div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-black text-brand-text truncate">Alex Rivera</p>
+              <p className="text-xs font-black text-brand-text truncate">Adm Datalab</p>
               <p className="text-[10px] font-bold text-brand-text-dim uppercase tracking-widest">Master</p>
             </div>
             <Link href="/login" className="text-brand-text-dim hover:text-brand-text transition-colors">
@@ -111,27 +107,12 @@ export default function ManagementPage() {
           <div className="space-y-16">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {MOCK_STATS.map((stat, idx) => (
-                <div key={idx} className="bg-white p-8 rounded-[2.5rem] border border-brand-border flex flex-col justify-between shadow-sm hover:shadow-2xl transition-all duration-500 group">
-                  <div className="flex justify-between items-start mb-8">
-                    <div className="w-14 h-14 bg-brand-bg rounded-2xl flex items-center justify-center text-brand-text group-hover:bg-brand-accent group-hover:text-white transition-all">
-                      <stat.icon size={24} />
-                    </div>
-                    <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest ${
-                      stat.change.startsWith('+') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                    }`}>
-                      {stat.change}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-brand-text/30 uppercase tracking-[0.2em] mb-2">{stat.label}</p>
-                    <h3 className="text-4xl font-black tracking-tight">{stat.value}</h3>
-                  </div>
-                </div>
-              ))}
+              <div className="col-span-full p-16 text-center">
+                <p className="text-brand-text-dim text-lg font-medium">Nenhum dado disponível no momento.</p>
+              </div>
             </div>
 
-            {/* Recent Posts Table */}
+            {/* Recent Activity Section */}
             <div className="bg-white rounded-[3rem] border border-brand-border overflow-hidden shadow-sm">
                <div className="p-8 border-b border-brand-border flex flex-col md:flex-row justify-between items-center gap-6 bg-brand-bg/20">
                   <h3 className="text-2xl font-black tracking-tight">Recent Activity</h3>
@@ -147,44 +128,21 @@ export default function ManagementPage() {
                   </div>
                </div>
                
-               <div className="overflow-x-auto p-4">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr>
-                        <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30">Entry Title</th>
-                        <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30">Author</th>
-                        <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30">Status</th>
-                        <th className="px-6 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 text-right">Ops</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-brand-border/40">
-                      {MOCK_POSTS.map((post) => (
-                        <tr key={post.id} className="hover:bg-brand-bg/50 transition-colors group">
-                          <td className="px-6 py-8">
-                            <span className="text-lg font-black tracking-tight block group-hover:text-brand-accent transition-colors cursor-pointer">{post.title}</span>
-                            <span className="text-[10px] font-bold text-brand-text-dim uppercase tracking-widest mt-1 block">ID: {post.id}00XF</span>
-                          </td>
-                          <td className="px-6 py-8 text-sm font-bold">{post.author}</td>
-                          <td className="px-6 py-8">
-                            <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border ${
-                              post.status === 'Publicado' 
-                                ? 'bg-brand-accent border-brand-accent text-white' 
-                                : 'bg-white border-brand-border text-brand-text-dim'
-                            }`}>
-                              {post.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-8 text-right">
-                             <div className="flex justify-end gap-3">
-                                <button className="w-10 h-10 rounded-xl border border-brand-border flex items-center justify-center hover:bg-brand-text hover:text-white transition-all"><Edit2 size={16} /></button>
-                                <button className="w-10 h-10 rounded-xl border border-brand-border flex items-center justify-center hover:bg-red-500 hover:border-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+               <div className="overflow-x-auto p-8 text-center">
+                  <p className="text-brand-text-dim text-lg font-medium">Nenhuma atividade no momento.</p>
                </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'posts' && (
+          <div className="flex flex-col items-center justify-center py-32 space-y-6">
+            <div className="w-24 h-24 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center">
+              <FileText size={48} />
+            </div>
+            <div className="text-center space-y-3">
+              <h3 className="text-3xl font-black text-brand-text">Journal</h3>
+              <p className="text-brand-text-dim text-lg font-medium">Funcionalidade disponível em breve.</p>
             </div>
           </div>
         )}
@@ -202,7 +160,7 @@ export default function ManagementPage() {
                     <p className="text-sm font-bold text-brand-text-dim mt-1 uppercase tracking-widest">Prospect management pool</p>
                   </div>
                </div>
-               <button className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Export Data</button>
+               <button onClick={() => setShowExportModal(true)} className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Export Data</button>
             </div>
 
             <div className="bg-white rounded-[2.5rem] border border-brand-border overflow-hidden shadow-sm p-4">
@@ -215,21 +173,12 @@ export default function ManagementPage() {
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30 text-right">Timestamp</th>
                     </tr>
                  </thead>
-                 <tbody className="divide-y divide-brand-border/40">
-                    {[
-                      { name: 'João Silva', email: 'joao@ufu.br', area: 'IA', date: '04 May, 2026' },
-                      { name: 'Maria Souza', email: 'maria@gmail.com', area: 'Data Science', date: '03 May, 2026' },
-                      { name: 'Pedro Lima', email: 'pedro@eng.com', area: 'Engineering', date: '02 May, 2026' },
-                    ].map((m, idx) => (
-                      <tr key={idx} className="hover:bg-brand-bg transition-colors">
-                        <td className="px-6 py-8 text-lg font-black tracking-tight">{m.name}</td>
-                        <td className="px-6 py-8 text-xs font-bold text-brand-text-dim">{m.email}</td>
-                        <td className="px-6 py-8">
-                           <span className="px-4 py-1.5 bg-brand-bg rounded-md text-[10px] font-black text-brand-text border border-brand-border uppercase tracking-widest">{m.area}</span>
-                        </td>
-                        <td className="px-6 py-8 text-right text-[10px] font-black text-brand-text-dim uppercase tracking-widest">{m.date}</td>
-                      </tr>
-                    ))}
+                 <tbody>
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center">
+                        <p className="text-brand-text-dim text-lg font-medium">Nenhum membro no momento.</p>
+                      </td>
+                    </tr>
                  </tbody>
                </table>
             </div>
@@ -246,18 +195,10 @@ export default function ManagementPage() {
                <div className="bg-white p-10 rounded-[3rem] border border-brand-border shadow-sm space-y-8">
                   <div className="flex gap-4">
                     <input className="flex-1 bg-brand-bg border border-brand-border rounded-2xl px-6 py-5 text-sm font-bold outline-none focus:border-brand-accent" placeholder="new-admin@datalab.tech" />
-                    <button className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Grant Access</button>
+                    <button onClick={() => setShowAccessModal(true)} className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Grant Access</button>
                   </div>
                   <div className="space-y-3">
-                    {['datalab.ufu@gmail.com', 'admin@datalab.tech'].map(email => (
-                      <div key={email} className="flex justify-between items-center p-6 bg-brand-bg rounded-2xl border border-brand-border group">
-                        <div className="flex items-center gap-4">
-                           <div className="w-3 h-3 bg-brand-accent rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-                           <span className="text-sm font-black italic">{email}</span>
-                        </div>
-                        <button className="text-brand-text-dim hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 uppercase text-[10px] font-black tracking-widest">Revoke</button>
-                      </div>
-                    ))}
+                    <p className="text-brand-text-dim text-lg font-medium">Nenhum administrador registrado.</p>
                   </div>
                </div>
             </section>
@@ -307,6 +248,96 @@ export default function ManagementPage() {
                     <button className="flex-1 py-5 bg-brand-text text-white font-black rounded-2xl shadow-xl shadow-brand-text/20 hover:bg-brand-accent transition-all">Deploy to Journal</button>
                     <button className="px-10 py-5 bg-white border border-brand-border text-brand-text font-black rounded-2xl hover:border-brand-text transition-all">Save as Draft</button>
                  </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showAccessModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAccessModal(false)}
+              className="absolute inset-0 bg-brand-text/20 backdrop-blur-md" 
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[3.5rem] p-12 shadow-2xl border border-brand-border overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-48 h-48 bg-brand-accent/5 rounded-full blur-3xl" />
+              
+              <div className="flex justify-between items-center mb-12 relative z-10">
+                <h3 className="text-4xl font-black tracking-tighter">Grant Access.</h3>
+                <button onClick={() => setShowAccessModal(false)} className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all">
+                  <Plus size={28} className="rotate-45" />
+                </button>
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center justify-center py-16 space-y-6">
+                <div className="w-20 h-20 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center">
+                  <Users size={40} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-brand-text">Funcionalidade em Desenvolvimento</h3>
+                  <p className="text-brand-text-dim mt-3 font-medium text-lg">Funcionalidade disponível em breve.</p>
+                  <p className="text-brand-text-dim mt-4 text-sm font-medium">Em breve você poderá gerenciar usuários e integrar com o Supabase Auth.</p>
+                </div>
+                <button 
+                  onClick={() => setShowAccessModal(false)}
+                  className="mt-6 px-10 py-3 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all"
+                >
+                  Entendi
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showExportModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowExportModal(false)}
+              className="absolute inset-0 bg-brand-text/20 backdrop-blur-md" 
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[3.5rem] p-12 shadow-2xl border border-brand-border overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-48 h-48 bg-brand-accent/5 rounded-full blur-3xl" />
+              
+              <div className="flex justify-between items-center mb-12 relative z-10">
+                <h3 className="text-4xl font-black tracking-tighter">Export Data.</h3>
+                <button onClick={() => setShowExportModal(false)} className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all">
+                  <Plus size={28} className="rotate-45" />
+                </button>
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center justify-center py-16 space-y-6">
+                <div className="w-20 h-20 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center">
+                  <FileText size={40} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-brand-text">Funcionalidade em Desenvolvimento</h3>
+                  <p className="text-brand-text-dim mt-3 font-medium text-lg">Funcionalidade disponível em breve.</p>
+                  <p className="text-brand-text-dim mt-4 text-sm font-medium">Em breve você poderá exportar os dados dos membros em diferentes formatos.</p>
+                </div>
+                <button 
+                  onClick={() => setShowExportModal(false)}
+                  className="mt-6 px-10 py-3 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all"
+                >
+                  Entendi
+                </button>
               </div>
             </motion.div>
           </div>
