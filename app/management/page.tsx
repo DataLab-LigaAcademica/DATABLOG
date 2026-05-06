@@ -34,6 +34,7 @@ export default function ManagementPage() {
   const [showNewPostModal, setShowNewPostModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [actionUnavailable, setActionUnavailable] = useState(false);
 
   return (
     <div className="min-h-screen bg-brand-bg flex">
@@ -228,7 +229,13 @@ export default function ManagementPage() {
               
               <div className="flex justify-between items-center mb-12">
                 <h3 className="text-4xl font-black tracking-tighter">Draft Insight.</h3>
-                <button onClick={() => setShowNewPostModal(false)} className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all">
+                <button 
+                  onClick={() => {
+                    setShowNewPostModal(false);
+                    setActionUnavailable(false);
+                  }} 
+                  className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all"
+                >
                   <Plus size={28} className="rotate-45" />
                 </button>
               </div>
@@ -245,8 +252,26 @@ export default function ManagementPage() {
                  </div>
 
                  <div className="flex gap-4 pt-4">
-                    <button className="flex-1 py-5 bg-brand-text text-white font-black rounded-2xl shadow-xl shadow-brand-text/20 hover:bg-brand-accent transition-all">Deploy to Journal</button>
-                    <button className="px-10 py-5 bg-white border border-brand-border text-brand-text font-black rounded-2xl hover:border-brand-text transition-all">Save as Draft</button>
+                    <button 
+                      onClick={() => setActionUnavailable(true)}
+                      className={`flex-1 py-5 font-black rounded-2xl shadow-xl transition-all ${
+                        actionUnavailable 
+                        ? 'bg-red-500 text-white shadow-red-500/20 cursor-not-allowed' 
+                        : 'bg-brand-text text-white shadow-brand-text/20 hover:bg-brand-accent'
+                      }`}
+                    >
+                      {actionUnavailable ? 'Indisponível' : 'Deploy to Journal'}
+                    </button>
+                    <button 
+                      onClick={() => setActionUnavailable(true)}
+                      className={`px-10 py-5 font-black rounded-2xl border transition-all ${
+                        actionUnavailable 
+                        ? 'bg-red-50 border-red-200 text-red-500 cursor-not-allowed' 
+                        : 'bg-white border-brand-border text-brand-text hover:border-brand-text'
+                      }`}
+                    >
+                      {actionUnavailable ? 'Indisponível' : 'Save as Draft'}
+                    </button>
                  </div>
               </div>
             </motion.div>
