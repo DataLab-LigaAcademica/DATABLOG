@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.datacamp.com',
+        hostname: 'hlexpuzcbixulwfchrpym.supabase.co',
         port: '',
         pathname: '/**',
       },
