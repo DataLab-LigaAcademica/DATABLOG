@@ -1,0 +1,14 @@
+{
+  "name": "DataLab | Research & Intelligence",
+  "description": "Plataforma integrada de pesquisa e governança do DataLab. Centraliza publicações científicas, gestão de talentos e o ecossistema de inovação em Ciência de Dados e IA.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "CRUD de Postagens",
+    "Gestão de Membros",
+    "Autenticação Administrativa",
+    "Integração com Supabase"
+  ]
+}
