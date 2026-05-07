@@ -10,9 +10,9 @@ export const Footer = () => (
         <span className="text-lg font-bold">DataLab</span>
       </div>
       <div className="flex gap-8 text-sm text-brand-text-dim">
-        <Link href="https://www.instagram.com/datalab.ufu/" className="hover:text-brand-accent transition-colors">Instagram</Link>
-        <Link href="https://www.linkedin.com/company/data-lab-ufu/" className="hover:text-brand-accent transition-colors">LinkedIn</Link>
-        <Link href="https://github.com/DataLab-LigaAcademica" className="hover:text-brand-accent transition-colors">GitHub</Link>
+        <Link href="https://www.instagram.com/datalab.ufu/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-accent transition-colors">Instagram</Link>
+        <Link href="https://www.linkedin.com/company/data-lab-ufu/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-accent transition-colors">LinkedIn</Link>
+        <Link href="https://github.com/DataLab-LigaAcademica" target="_blank" rel="noopener noreferrer" className="hover:text-brand-accent transition-colors">GitHub</Link>
       </div>
       <p className="text-xs text-brand-text-dim/50">
         © 2026 DataLab. Desenvolvido com foco em inovação.
