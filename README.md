@@ -112,32 +112,10 @@ A plataforma encontra-se em uma fase de **Protótipo Funcional Avançado**. A in
 - **Login:** Interface finalizada com simulação de autenticação (Mock). Pronto para ativação do Supabase Auth.
 - **Overview (Dashboard):** Layout estruturado com placeholders para métricas em tempo real.
 - **Journal (Blog Admin):** Sistema de rascunho visual integrado. Botões de ação em modo de "Segurança" (Indisponível).
-- **Network (Membros):** Tabela de visualização preparada para consumir dados da tabela `site.members`.
-- **System (Config):** Interface de controle de acesso preparada para integração com políticas de RLS.
+- **Network (Membros):** Tabela de visualização preparada para consumir dados da tabela `site.members`.(Indisponível)
+- **System (Config):** Interface de controle de acesso preparada para integração com políticas de RLS.(Indisponível)
 
 ---
-
-## 🚀 Como Ativar as Funcionalidades "Indisponíveis"
-
-Atualmente, no módulo de **Criação de Post**, os botões "Deploy to Journal" e "Save as Draft" acionam um estado de erro visual (vermelho) indicando indisponibilidade. Para torná-los funcionais, siga os passos abaixo:
-
-### 1. Remover o Bloqueio Visual
-No arquivo `app/management/page.tsx`, remova o estado `actionUnavailable` e a lógica de `onClick` que dispara o `setActionUnavailable(true)`.
-
-### 2. Implementar a Persistência (Supabase)
-Substitua o `onClick` por uma função assíncrona (Server Action ou API Route) que realize o seguinte:
-```typescript
-const { data, error } = await supabase
-  .from('posts')
-  .insert([
-    { 
-      title: titleFromInput, 
-      content: contentFromTextarea,
-      status: 'published', // ou 'draft' para o botão de rascunho
-      author_id: currentUser.id 
-    }
-  ]);
-```
 
 ### 3. Requisitos de Infraestrutura e Supabase
 
