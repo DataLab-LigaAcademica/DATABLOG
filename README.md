@@ -38,12 +38,10 @@ Este projeto é uma plataforma integrada para o **DataLab**, um núcleo acadêmi
 - **System:** Gestão de permissões e configurações do núcleo.
 
 ### 4. Autenticação e Segurança
-- Login via Google Auth / Supabase.
+- Login via Google Auth .
 - Porta de entrada protegida para administradores.
-- RLS (Row Level Security) configurado no banco de dados para proteção de dados sensíveis.
-
-## 🗄 Banco de Dados (Supabase)
-
+- 
+## 🗄 Banco de Dados
 O esquema está organizado sob o schema `site`:
 
 - `site.posts`: Armazena os artigos do blog.
@@ -52,7 +50,7 @@ O esquema está organizado sob o schema `site`:
 - `site.tags`: Categorias para organização do blog.
 
 ### Regras de Negócio Implementadas (SQL):
-- **Limite Diário:** Máximo de 2 postagens por autor por dia (via Trigger).
+- **Limite Diário:** Máximo de 2 postagens por autor por dia.
 - **RLS:** Apenas usuários autenticados podem gerenciar posts e ver membros.
 
 ---
@@ -108,117 +106,8 @@ Assim que o terminal mostrar "Ready in...", abra o seu navegador e acesse:
 
 A plataforma encontra-se em uma fase de **Protótipo Funcional Avançado**. A interface (UI) está 100% finalizada seguindo os padrões de design do DataLab, enquanto a lógica de backend está sendo integrada progressivamente.
 
-### 📊 Status dos Módulos (Admin OS)
-- **Login:** Interface finalizada com simulação de autenticação (Mock). Pronto para ativação do Supabase Auth.
-- **Overview (Dashboard):** Layout estruturado com placeholders para métricas em tempo real.
-- **Journal (Blog Admin):** Sistema de rascunho visual integrado. Botões de ação em modo de "Segurança" (Indisponível).
-- **Network (Membros):** Tabela de visualização preparada para consumir dados da tabela `site.members`.
-- **System (Config):** Interface de controle de acesso preparada para integração com políticas de RLS.
-
----
-
-## 🚀 Como Ativar as Funcionalidades "Indisponíveis"
-
-Atualmente, no módulo de **Criação de Post**, os botões "Deploy to Journal" e "Save as Draft" acionam um estado de erro visual (vermelho) indicando indisponibilidade. Para torná-los funcionais, siga os passos abaixo:
-
-### 1. Remover o Bloqueio Visual
-No arquivo `app/management/page.tsx`, remova o estado `actionUnavailable` e a lógica de `onClick` que dispara o `setActionUnavailable(true)`.
-
-### 2. Implementar a Persistência (Supabase)
-Substitua o `onClick` por uma função assíncrona (Server Action ou API Route) que realize o seguinte:
-```typescript
-const { data, error } = await supabase
-  .from('posts')
-  .insert([
-    { 
-      title: titleFromInput, 
-      content: contentFromTextarea,
-      status: 'published', // ou 'draft' para o botão de rascunho
-      author_id: currentUser.id 
-    }
-  ]);
-```
-
-### 3. Requisitos de Infraestrutura e Supabase
-
-Para que o backend funcione corretamente com o esquema personalizado `site`, você precisa habilitá-lo no painel do Supabase (o comando SQL manual é bloqueado por segurança):
-
-1. Vá em **Settings** (ícone de engrenagem) -> **API**.
-2. Na seção **Data API Settings**, localize o campo **Exposed Schemas**.
-3. Adicione o schema `site` à lista (ex: `public, site`).
-4. Clique em **Save**.
-5. Aguarde 30 segundos para o servidor reiniciar a configuração.
-
-#### Tabelas Necessárias
-Certifique-se de que a tabela `site.posts` exista com as colunas corretas e a **relação de chave estrangeira**:
-
-1. Execute este SQL para garantir a relação (substitua os nomes se necessário):
-   ```sql
-   -- Garante que a coluna author_id aponte para a tabela de autores
-   ALTER TABLE site.posts 
-   ADD CONSTRAINT fk_author 
-   FOREIGN KEY (author_id) 
-   REFERENCES site.authors(user_id)
-   ON DELETE SET NULL;
-
-   -- Notifica o PostgREST para recarregar o cache
-   NOTIFY pgrst, 'reload config';
-   ```
-
-#### Colunas de `site.posts`:
-- `id` (uuid)
-- `title` (text)
-- `slug` (text, unique)
-- `content` (text)
-- `image_url` (text, nullable)
-- `published` (boolean)
-- `author_id` (uuid, fk para authors)
-- `created_at` (timestamptz)
-
-#### Colunas de `site.authors`:
-- `id` (uuid, primary key)
-- `user_id` (uuid, unique) -- **CRÍTICO: Deve ser UNIQUE para o salvamento funcionar**
-- `name` (text)
-- `email` (text)
-- `avatar_url` (text, nullable)
-- `updated_at` (timestamptz)
-
-**Script de Reparo de Tabelas (SQL):**
-Execute este SQL completo se encontrar erros de "coluna não encontrada" ou "chave estrangeira":
-```sql
--- Garante colunas necessárias em site.authors
-ALTER TABLE site.authors ADD COLUMN IF NOT EXISTS email text;
-ALTER TABLE site.authors ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
-
--- Garante que o user_id seja único para o salvamento automático funcionar
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_id') THEN
-        ALTER TABLE site.authors ADD CONSTRAINT unique_user_id UNIQUE (user_id);
-    END IF;
-END $$;
-
--- Garante a relação entre posts e autores
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_author') THEN
-        ALTER TABLE site.posts ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES site.authors(user_id) ON DELETE SET NULL;
-    END IF;
-END $$;
-
--- Limpa o cache do Supabase para reconhecer as mudanças
-NOTIFY pgrst, 'reload config';
-```
-
----
-
 ## 🔧 Configuração e Manutenção
 
-### Variáveis de Ambiente (`.env`)
-Certifique-se de configurar as seguintes chaves no seu ambiente:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (apenas server-side)
 
 ### Adicionando Novos Núcleos
 Para adicionar um novo núcleo estratégico na Home, edite o array de componentes `NucleoCard` em `app/page.tsx`.
@@ -226,11 +115,6 @@ Para adicionar um novo núcleo estratégico na Home, edite o array de componente
 ### Atualizando Logos de Parceiros
 As imagens dos parceiros estão em `app/page.tsx`. Certifique-se de que o domínio da imagem esteja autorizado em `next.config.ts` se for externo.
 
-## 📈 Próximos Passos (Backlog)
-- [ ] Implementar sistema de comentários via Supabase.
-- [ ] Otimização de SEO dinâmica nos posts.
-- [ ] Painel de métricas em tempo real com Recharts.
-- [ ] Exportação de relatórios de membros em PDF/Excel.
 
 ---
 © 2026 DataLab. Desenvolvido com foco em inovação e ciência.
