@@ -295,11 +295,9 @@ export default function Home() {
             </div>
           </div>
           <div className="flex gap-12">
-            {[ "Instagram", "LinkedIn", "GitHub" ].map(social => (
-              <Link key={social} href="#" className="font-bold text-brand-text hover:text-brand-accent transition-colors">
-                {social}
-              </Link>
-            ))}
+            <a href="https://www.instagram.com/datalab.ufu/" target="_blank" rel="noopener noreferrer" className="font-bold text-brand-text hover:text-brand-accent transition-colors">Instagram</a>
+            <a href="https://www.linkedin.com/company/data-lab-ufu/" target="_blank" rel="noopener noreferrer" className="font-bold text-brand-text hover:text-brand-accent transition-colors">LinkedIn</a>
+            <a href="https://github.com/DataLab-LigaAcademica" target="_blank" rel="noopener noreferrer" className="font-bold text-brand-text hover:text-brand-accent transition-colors">GitHub</a>
           </div>
           <p className="text-xs font-bold text-brand-text/30">
             © 2026. Made by DataLab.
