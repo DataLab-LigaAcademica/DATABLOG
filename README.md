@@ -139,11 +139,26 @@ const { data, error } = await supabase
   ]);
 ```
 
-### 3. Requisitos de Infraestrutura
-Para que a gravação funcione, certifique-se de que:
-- As chaves `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` estejam configuradas no `.env.local`.
-- A tabela `site.posts` exista no banco de dados com as colunas corretas.
-- As políticas de RLS (Row Level Security) permitam `INSERT` para usuários autenticados.
+### 3. Requisitos de Infraestrutura e Supabase
+
+Para que o backend funcione corretamente com o esquema personalizado `site`, você precisa habilitá-lo no painel do Supabase (o comando SQL manual é bloqueado por segurança):
+
+1. Vá em **Settings** (ícone de engrenagem) -> **API**.
+2. Na seção **Data API Settings**, localize o campo **Exposed Schemas**.
+3. Adicione o schema `site` à lista (ex: `public, site`).
+4. Clique em **Save**.
+5. Aguarde 30 segundos para o servidor reiniciar a configuração.
+
+#### Tabelas Necessárias
+Certifique-se de que a tabela `site.posts` exista com as colunas corretas:
+- `id` (uuid)
+- `title` (text)
+- `slug` (text, unique)
+- `content` (text)
+- `image_url` (text, nullable)
+- `published` (boolean)
+- `author_id` (uuid, fk para authors)
+- `created_at` (timestamptz)
 
 ---
 

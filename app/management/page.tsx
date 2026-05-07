@@ -17,9 +17,13 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon,
+  Upload,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 // Mock Data
 const MOCK_STATS = [
@@ -34,7 +38,99 @@ export default function ManagementPage() {
   const [showNewPostModal, setShowNewPostModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [actionUnavailable, setActionUnavailable] = useState(false);
+  
+  // Post states
+  const [postTitle, setPostTitle] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setPostError('A imagem deve ter menos de 5MB');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreatePost = async (status: 'published' | 'draft') => {
+    if (!postTitle || !postContent) {
+      setPostError('Por favor, preencha o título e o conteúdo.');
+      return;
+    }
+
+    setSubmitting(true);
+    setPostError(null);
+
+    try {
+      let imageUrl = null;
+
+      // 0. Get session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // 1. Upload image if exists
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `posts/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('post-images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(filePath);
+        
+        imageUrl = publicUrl;
+      }
+
+      // 2. Create post
+      const response = await fetch('/api/posts/create', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
+        },
+        body: JSON.stringify({ 
+          title: postTitle, 
+          content: postContent,
+          image_url: imageUrl,
+          status 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar postagem');
+      }
+
+      // Success
+      setPostTitle('');
+      setPostContent('');
+      setImageFile(null);
+      setImagePreview(null);
+      setShowNewPostModal(false);
+      alert(status === 'published' ? 'Post publicado com sucesso!' : 'Rascunho salvo com sucesso!');
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-brand-bg flex">
@@ -232,7 +328,7 @@ export default function ManagementPage() {
                 <button 
                   onClick={() => {
                     setShowNewPostModal(false);
-                    setActionUnavailable(false);
+                    setPostError(null);
                   }} 
                   className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all"
                 >
@@ -240,37 +336,78 @@ export default function ManagementPage() {
                 </button>
               </div>
 
+              {postError && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center">
+                  {postError}
+                </div>
+              )}
+
               <div className="space-y-8">
                  <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 ml-2">Title</label>
-                    <input type="text" className="w-full bg-brand-bg border border-brand-border rounded-2xl p-5 outline-none focus:border-brand-accent transition-all font-black text-xl tracking-tight" placeholder="Headline here..." />
+                    <input 
+                      type="text" 
+                      value={postTitle}
+                      onChange={(e) => setPostTitle(e.target.value)}
+                      className="w-full bg-brand-bg border border-brand-border rounded-2xl p-5 outline-none focus:border-brand-accent transition-all font-black text-xl tracking-tight" 
+                      placeholder="Headline here..." 
+                    />
+                 </div>
+
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 ml-2">Capa do Post</label>
+                    <div className="relative group">
+                      {imagePreview ? (
+                        <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-brand-border">
+                           <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                           <button 
+                             onClick={() => {
+                               setImageFile(null);
+                               setImagePreview(null);
+                             }}
+                             className="absolute top-4 right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all z-20"
+                           >
+                             <X size={16} />
+                           </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-48 bg-brand-bg border-2 border-dashed border-brand-border rounded-2xl cursor-pointer hover:border-brand-accent transition-all">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-brand-text-dim">
+                            <Upload size={32} className="mb-3" />
+                            <p className="text-xs font-black uppercase tracking-widest">Upload Image</p>
+                            <p className="text-[10px] mt-2">PNG, JPG ou WEBP (Max. 5MB)</p>
+                          </div>
+                          <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                        </label>
+                      )}
+                    </div>
                  </div>
                  
                  <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 ml-2">Structured Content (Markdown)</label>
-                    <textarea rows={8} className="w-full bg-brand-bg border border-brand-border rounded-2xl p-6 outline-none focus:border-brand-accent transition-all resize-none font-medium text-sm leading-relaxed" placeholder="Detailed analysis and markdown supported..." />
+                    <textarea 
+                      rows={8} 
+                      value={postContent}
+                      onChange={(e) => setPostContent(e.target.value)}
+                      className="w-full bg-brand-bg border border-brand-border rounded-2xl p-6 outline-none focus:border-brand-accent transition-all resize-none font-medium text-sm leading-relaxed" 
+                      placeholder="Detailed analysis and markdown supported..." 
+                    />
                  </div>
 
                  <div className="flex gap-4 pt-4">
                     <button 
-                      onClick={() => setActionUnavailable(true)}
-                      className={`flex-1 py-5 font-black rounded-2xl shadow-xl transition-all ${
-                        actionUnavailable 
-                        ? 'bg-red-500 text-white shadow-red-500/20 cursor-not-allowed' 
-                        : 'bg-brand-text text-white shadow-brand-text/20 hover:bg-brand-accent'
-                      }`}
+                      onClick={() => handleCreatePost('published')}
+                      disabled={submitting}
+                      className="flex-1 py-5 bg-brand-text text-white font-black rounded-2xl shadow-xl shadow-brand-text/20 hover:bg-brand-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionUnavailable ? 'Indisponível' : 'Deploy to Journal'}
+                      {submitting ? 'Aguarde...' : 'Deploy to Journal'}
                     </button>
                     <button 
-                      onClick={() => setActionUnavailable(true)}
-                      className={`px-10 py-5 font-black rounded-2xl border transition-all ${
-                        actionUnavailable 
-                        ? 'bg-red-50 border-red-200 text-red-500 cursor-not-allowed' 
-                        : 'bg-white border-brand-border text-brand-text hover:border-brand-text'
-                      }`}
+                      onClick={() => handleCreatePost('draft')}
+                      disabled={submitting}
+                      className="px-10 py-5 bg-white border border-brand-border text-brand-text font-black rounded-2xl hover:border-brand-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionUnavailable ? 'Indisponível' : 'Save as Draft'}
+                      {submitting ? '...' : 'Save as Draft'}
                     </button>
                  </div>
               </div>
