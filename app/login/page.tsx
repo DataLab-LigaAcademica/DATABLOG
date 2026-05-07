@@ -13,15 +13,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Falha na autenticação');
+      }
+
       router.push('/management');
-    }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,6 +59,16 @@ export default function LoginPage() {
             <h1 className="text-4xl font-black tracking-tighter text-brand-text">Admin Portal</h1>
             <p className="text-brand-text-dim text-sm font-medium">Acesso restrito para o núcleo DataLab</p>
           </div>
+
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center"
+            >
+              Falha no login contate o administrador do sistema
+            </motion.div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
