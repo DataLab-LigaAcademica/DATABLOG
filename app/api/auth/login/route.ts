@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     console.log(`[AUTH] Login bem-sucedido: ${email} - Status: 200`);
-    return NextResponse.json({ success: true, user: data.user }, { status: 200 });
+    return NextResponse.json({ success: true, session: data.session, user: data.user }, { status: 200 });
   } catch (err) {
     console.error(`[AUTH] Erro interno:`, err);
     return NextResponse.json(

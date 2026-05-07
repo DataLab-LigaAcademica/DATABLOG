@@ -112,38 +112,31 @@ A plataforma encontra-se em uma fase de **Protótipo Funcional Avançado**. A in
 - **Login:** Interface finalizada com simulação de autenticação (Mock). Pronto para ativação do Supabase Auth.
 - **Overview (Dashboard):** Layout estruturado com placeholders para métricas em tempo real.
 - **Journal (Blog Admin):** Sistema de rascunho visual integrado. Botões de ação em modo de "Segurança" (Indisponível).
-- **Network (Membros):** Tabela de visualização preparada para consumir dados da tabela `site.members`.
-- **System (Config):** Interface de controle de acesso preparada para integração com políticas de RLS.
+- **Network (Membros):** Tabela de visualização preparada para consumir dados da tabela `site.members`.(Indisponível)
+- **System (Config):** Interface de controle de acesso preparada para integração com políticas de RLS.(Indisponível)
 
 ---
 
-## 🚀 Como Ativar as Funcionalidades "Indisponíveis"
+### 3. Requisitos de Infraestrutura e Supabase
 
-Atualmente, no módulo de **Criação de Post**, os botões "Deploy to Journal" e "Save as Draft" acionam um estado de erro visual (vermelho) indicando indisponibilidade. Para torná-los funcionais, siga os passos abaixo:
+Para que o backend funcione corretamente com o esquema personalizado `site`, você precisa habilitá-lo no painel do Supabase (o comando SQL manual é bloqueado por segurança):
 
-### 1. Remover o Bloqueio Visual
-No arquivo `app/management/page.tsx`, remova o estado `actionUnavailable` e a lógica de `onClick` que dispara o `setActionUnavailable(true)`.
+1. Vá em **Settings** (ícone de engrenagem) -> **API**.
+2. Na seção **Data API Settings**, localize o campo **Exposed Schemas**.
+3. Adicione o schema `site` à lista (ex: `public, site`).
+4. Clique em **Save**.
+5. Aguarde 30 segundos para o servidor reiniciar a configuração.
 
-### 2. Implementar a Persistência (Supabase)
-Substitua o `onClick` por uma função assíncrona (Server Action ou API Route) que realize o seguinte:
-```typescript
-const { data, error } = await supabase
-  .from('posts')
-  .insert([
-    { 
-      title: titleFromInput, 
-      content: contentFromTextarea,
-      status: 'published', // ou 'draft' para o botão de rascunho
-      author_id: currentUser.id 
-    }
-  ]);
-```
-
-### 3. Requisitos de Infraestrutura
-Para que a gravação funcione, certifique-se de que:
-- As chaves `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` estejam configuradas no `.env.local`.
-- A tabela `site.posts` exista no banco de dados com as colunas corretas.
-- As políticas de RLS (Row Level Security) permitam `INSERT` para usuários autenticados.
+#### Tabelas Necessárias
+Certifique-se de que a tabela `site.posts` exista com as colunas corretas:
+- `id` (uuid)
+- `title` (text)
+- `slug` (text, unique)
+- `content` (text)
+- `image_url` (text, nullable)
+- `published` (boolean)
+- `author_id` (uuid, fk para authors)
+- `created_at` (timestamptz)
 
 ---
 

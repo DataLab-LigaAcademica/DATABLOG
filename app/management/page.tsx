@@ -17,9 +17,14 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 // Mock Data
 const MOCK_STATS = [
@@ -34,7 +39,129 @@ export default function ManagementPage() {
   const [showNewPostModal, setShowNewPostModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [actionUnavailable, setActionUnavailable] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // Post states
+  const [postTitle, setPostTitle] = useState('');
+  const [postContent, setPostContent] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
+
+  // List states
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  const fetchPosts = async () => {
+    setLoadingPosts(true);
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (err: any) {
+      console.error('Erro ao buscar posts:', err.message || err);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === 'posts') {
+      fetchPosts();
+    }
+  }, [activeTab]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setPostError('A imagem deve ter menos de 5MB');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreatePost = async (status: 'published' | 'draft') => {
+    if (!postTitle || !postContent) {
+      setPostError('Por favor, preencha o título e o conteúdo.');
+      return;
+    }
+
+    setSubmitting(true);
+    setPostError(null);
+
+    try {
+      let imageUrl = null;
+
+      // 0. Get session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // 1. Upload image if exists
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `posts/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('post-images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(filePath);
+        
+        imageUrl = publicUrl;
+      }
+
+      // 2. Create post
+      const response = await fetch('/api/posts/create', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
+        },
+        body: JSON.stringify({ 
+          title: postTitle, 
+          content: postContent,
+          image_url: imageUrl,
+          status 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar postagem');
+      }
+
+      // Success
+      setPostTitle('');
+      setPostContent('');
+      setImageFile(null);
+      setImagePreview(null);
+      setShowNewPostModal(false);
+      fetchPosts(); // Atualiza a lista após criar
+      setShowSuccessModal(true);
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-brand-bg flex">
@@ -137,13 +264,93 @@ export default function ManagementPage() {
         )}
 
         {activeTab === 'posts' && (
-          <div className="flex flex-col items-center justify-center py-32 space-y-6">
-            <div className="w-24 h-24 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center">
-              <FileText size={48} />
+          <div className="space-y-10">
+            <div className="bg-white rounded-[2.5rem] border border-brand-border p-10 flex justify-between items-center shadow-sm">
+               <div className="flex items-center gap-8">
+                  <div className="w-20 h-20 bg-brand-accent/10 rounded-[1.5rem] flex items-center justify-center text-brand-accent shadow-xl">
+                    <FileText size={36} />
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-black tracking-tight">Journal Entries</h3>
+                    <p className="text-sm font-bold text-brand-text-dim mt-1 uppercase tracking-widest">Content Management System</p>
+                  </div>
+               </div>
+               <button 
+                onClick={() => setShowNewPostModal(true)} 
+                className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all flex items-center gap-2"
+               >
+                <Plus size={20} /> Create New
+               </button>
             </div>
-            <div className="text-center space-y-3">
-              <h3 className="text-3xl font-black text-brand-text">Journal</h3>
-              <p className="text-brand-text-dim text-lg font-medium">Funcionalidade disponível em breve.</p>
+
+            <div className="bg-white rounded-[2.5rem] border border-brand-border overflow-hidden shadow-sm p-4">
+               <table className="w-full text-left font-bold">
+                 <thead>
+                    <tr className="border-b border-brand-border/50">
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Post Title</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Status</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Created At</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30 text-right">Actions</th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    {loadingPosts ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center">
+                          <Loader2 className="animate-spin mx-auto text-brand-accent mb-4" size={32} />
+                          <p className="text-brand-text-dim text-sm font-bold uppercase tracking-widest">Sincronizando banco de dados...</p>
+                        </td>
+                      </tr>
+                    ) : posts.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-brand-text-dim">
+                          Nenhum post encontrado. Comece criando um novo!
+                        </td>
+                      </tr>
+                    ) : (
+                      posts.map((post) => (
+                        <tr key={post.id} className="group hover:bg-brand-bg/50 transition-colors border-b border-brand-border/30 last:border-0 text-sm">
+                          <td className="px-6 py-6">
+                            <div className="flex items-center gap-4">
+                              {post.image_url && (
+                                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-brand-bg border border-brand-border">
+                                  <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                              <p className="font-black text-brand-text tracking-tight truncate max-w-xs">{post.title}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-6">
+                            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              post.published 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {post.published ? (
+                                <><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Published</>
+                              ) : (
+                                <><div className="w-1.5 h-1.5 rounded-full bg-gray-400" /> Draft</>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-6 py-6 text-xs text-brand-text-dim">
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-6 text-right">
+                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="p-2 hover:bg-white rounded-lg text-brand-text-dim hover:text-brand-accent transition-all shadow-sm">
+                                <Edit2 size={16} />
+                              </button>
+                              <button className="p-2 hover:bg-white rounded-lg text-brand-text-dim hover:text-red-500 transition-all shadow-sm">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                 </tbody>
+               </table>
             </div>
           </div>
         )}
@@ -232,7 +439,7 @@ export default function ManagementPage() {
                 <button 
                   onClick={() => {
                     setShowNewPostModal(false);
-                    setActionUnavailable(false);
+                    setPostError(null);
                   }} 
                   className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all"
                 >
@@ -240,37 +447,78 @@ export default function ManagementPage() {
                 </button>
               </div>
 
+              {postError && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center">
+                  {postError}
+                </div>
+              )}
+
               <div className="space-y-8">
                  <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 ml-2">Title</label>
-                    <input type="text" className="w-full bg-brand-bg border border-brand-border rounded-2xl p-5 outline-none focus:border-brand-accent transition-all font-black text-xl tracking-tight" placeholder="Headline here..." />
+                    <input 
+                      type="text" 
+                      value={postTitle}
+                      onChange={(e) => setPostTitle(e.target.value)}
+                      className="w-full bg-brand-bg border border-brand-border rounded-2xl p-5 outline-none focus:border-brand-accent transition-all font-black text-xl tracking-tight" 
+                      placeholder="Headline here..." 
+                    />
+                 </div>
+
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 ml-2">Capa do Post</label>
+                    <div className="relative group">
+                      {imagePreview ? (
+                        <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-brand-border">
+                           <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                           <button 
+                             onClick={() => {
+                               setImageFile(null);
+                               setImagePreview(null);
+                             }}
+                             className="absolute top-4 right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all z-20"
+                           >
+                             <X size={16} />
+                           </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-48 bg-brand-bg border-2 border-dashed border-brand-border rounded-2xl cursor-pointer hover:border-brand-accent transition-all">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-brand-text-dim">
+                            <Upload size={32} className="mb-3" />
+                            <p className="text-xs font-black uppercase tracking-widest">Upload Image</p>
+                            <p className="text-[10px] mt-2">PNG, JPG ou WEBP (Max. 5MB)</p>
+                          </div>
+                          <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                        </label>
+                      )}
+                    </div>
                  </div>
                  
                  <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/30 ml-2">Structured Content (Markdown)</label>
-                    <textarea rows={8} className="w-full bg-brand-bg border border-brand-border rounded-2xl p-6 outline-none focus:border-brand-accent transition-all resize-none font-medium text-sm leading-relaxed" placeholder="Detailed analysis and markdown supported..." />
+                    <textarea 
+                      rows={8} 
+                      value={postContent}
+                      onChange={(e) => setPostContent(e.target.value)}
+                      className="w-full bg-brand-bg border border-brand-border rounded-2xl p-6 outline-none focus:border-brand-accent transition-all resize-none font-medium text-sm leading-relaxed" 
+                      placeholder="Detailed analysis and markdown supported..." 
+                    />
                  </div>
 
                  <div className="flex gap-4 pt-4">
                     <button 
-                      onClick={() => setActionUnavailable(true)}
-                      className={`flex-1 py-5 font-black rounded-2xl shadow-xl transition-all ${
-                        actionUnavailable 
-                        ? 'bg-red-500 text-white shadow-red-500/20 cursor-not-allowed' 
-                        : 'bg-brand-text text-white shadow-brand-text/20 hover:bg-brand-accent'
-                      }`}
+                      onClick={() => handleCreatePost('published')}
+                      disabled={submitting}
+                      className="flex-1 py-5 bg-brand-text text-white font-black rounded-2xl shadow-xl shadow-brand-text/20 hover:bg-brand-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionUnavailable ? 'Indisponível' : 'Deploy to Journal'}
+                      {submitting ? 'Aguarde...' : 'Deploy to Journal'}
                     </button>
                     <button 
-                      onClick={() => setActionUnavailable(true)}
-                      className={`px-10 py-5 font-black rounded-2xl border transition-all ${
-                        actionUnavailable 
-                        ? 'bg-red-50 border-red-200 text-red-500 cursor-not-allowed' 
-                        : 'bg-white border-brand-border text-brand-text hover:border-brand-text'
-                      }`}
+                      onClick={() => handleCreatePost('draft')}
+                      disabled={submitting}
+                      className="px-10 py-5 bg-white border border-brand-border text-brand-text font-black rounded-2xl hover:border-brand-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionUnavailable ? 'Indisponível' : 'Save as Draft'}
+                      {submitting ? '...' : 'Save as Draft'}
                     </button>
                  </div>
               </div>
@@ -362,6 +610,45 @@ export default function ManagementPage() {
                   className="mt-6 px-10 py-3 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all"
                 >
                   Entendi
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute inset-0 bg-brand-text/40 backdrop-blur-md" 
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[3rem] p-12 shadow-2xl border border-brand-border text-center overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl" />
+              
+              <div className="relative z-10 space-y-6">
+                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <CheckCircle2 size={40} />
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black tracking-tight text-brand-text">Sucesso!</h3>
+                  <p className="text-brand-text-dim font-medium">Sua postagem foi processada e salva com sucesso no banco de dados.</p>
+                </div>
+                
+                <button 
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-4 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all shadow-xl shadow-brand-text/10"
+                >
+                  Continuar
                 </button>
               </div>
             </motion.div>

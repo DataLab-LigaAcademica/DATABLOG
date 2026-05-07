@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer';
 import { Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -32,6 +33,11 @@ export default function LoginPage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Falha na autenticação');
+      }
+
+      // Sincroniza a sessão com o cliente frontend
+      if (data.session) {
+        await supabase.auth.setSession(data.session);
       }
 
       router.push('/management');
@@ -66,7 +72,7 @@ export default function LoginPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center"
             >
-              Falha no login contate o administrador do sistema
+              Existem inconsistências: {error}
             </motion.div>
           )}
 
