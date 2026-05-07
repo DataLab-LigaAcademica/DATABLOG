@@ -43,9 +43,34 @@ export async function POST(request: Request) {
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
       if (user) {
         authorId = user.id;
         console.log('[POSTS] Autor identificado via JWT:', authorId);
+        
+        // Garante que o autor existe na tabela site.authors para evitar erro de FK
+        console.log('[POSTS] Sincronizando autor em site.authors...');
+        const { data: syncData, error: upsertError } = await supabase
+          .from('authors')
+          .upsert({ 
+            id: user.id,
+            user_id: user.id, 
+            name: user.email?.split('@')[0] || 'Admin',
+            //email: user.email, 
+            //  Opcional, dependendo do design da tabela
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' })
+          .select();
+          
+        if (upsertError) {
+          console.error('[POSTS] ERRO CRÍTICO ao sincronizar autor:', upsertError.message);
+          return NextResponse.json(
+            { error: `Erro ao registrar autor no banco: ${upsertError.message}. Verifique se a tabela site.authors existe e se o RLS permite a inserção.` },
+            { status: 500 }
+          );
+        } else {
+          console.log('[POSTS] Autor sincronizado com sucesso:', syncData);
+        }
       } else {
         console.log('[POSTS] Erro ao validar token JWT:', authError?.message);
       }
@@ -63,25 +88,6 @@ export async function POST(request: Request) {
       if (authors && authors.length > 0) {
         authorId = authors[0].user_id;
         console.log('[POSTS] Autor identificado via Fallback (DB):', authorId);
-      }
-    }
-
-    // Ultima tentativa: Se temos o token mas o autor não está na tabela site.authors, vamos tentar inserir ele lá
-    if (!authorId && authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      
-      if (user) {
-        authorId = user.id;
-        console.log('[POSTS] Tentando registrar autor automaticamente:', user.email);
-        
-        // Tenta inserir na tabela de autores para garantir que a FK não quebre
-        await supabase.from('authors').insert([{ 
-          user_id: user.id, 
-          name: user.email?.split('@')[0] || 'Admin',
-          email: user.email 
-        }]).select();
-        // Não checamos erro aqui pois ele pode já existir mas não foi retornado no select anterior
       }
     }
 
