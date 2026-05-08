@@ -32,8 +32,9 @@ const Navbar = () => {
             <span className="text-xl font-bold tracking-tight text-brand-text">Data<span className="text-brand-accent">Lab</span></span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <Link href="/posts" className="hover:text-brand-accent transition-colors">Mini-Cursos</Link>
             <Link href="/" className="hover:text-brand-accent transition-colors">Início</Link>
-            <Link href="#nucleos" className="hover:text-brand-accent transition-colors">Núcleos</Link>
+            <a href="#nucleos" className="hover:text-brand-accent transition-colors">Núcleos</a>
             <Link href="/posts" className="hover:text-brand-accent transition-colors">Blog</Link>
             <Link href="/login" className="px-4 py-2 bg-brand-surface rounded-full border border-white/10 hover:border-brand-accent transition-all">Login</Link>
           </div>
@@ -53,12 +54,15 @@ const Navbar = () => {
               </button>
             </div>
             <div className="flex flex-col gap-0 flex-1 p-6">
+                <Link href="/posts" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+                Mini-Cursos
+              </Link>
               <Link href="/" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
                 Início
               </Link>
-              <Link href="#nucleos" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+              <a href="#nucleos" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
                 Núcleos
-              </Link>
+              </a>
               <Link href="/posts" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
                 Blog
               </Link>
@@ -89,7 +93,7 @@ const NucleoCard = ({ title, icon: Icon, description }: { title: string, icon: a
 );
 
 export default function Home() {
-  const [formData, setFormData] = useState({ name: '', email: '', area: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', area: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +117,7 @@ export default function Home() {
       }
 
       setSubmitted(true);
-      setFormData({ name: '', email: '', area: '' });
+      setFormData({ name: '', email: '', phone: '', area: '' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
     } finally {
@@ -152,9 +156,9 @@ export default function Home() {
               Transformando o complexo em inteligível através da ciência de dados de ponta.
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
-              <Link href="#participe" className="px-10 py-5 bg-brand-text text-white font-bold rounded-2xl hover:bg-brand-accent transition-all shadow-xl shadow-brand-text/10">
+              <a href="#participe" className="px-10 py-5 bg-brand-text text-white font-bold rounded-2xl hover:bg-brand-accent transition-all shadow-xl shadow-brand-text/10">
                 Fazer parte do time
-              </Link>
+              </a>
               <Link href="/posts" className="px-10 py-5 bg-white border border-brand-border text-brand-text font-bold rounded-2xl hover:border-brand-accent transition-all flex items-center gap-3">
                 Explorar Blog <ArrowRight size={20} />
               </Link>
@@ -282,7 +286,7 @@ export default function Home() {
               {!submitted ? (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/40 ml-1">Full Name</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/40 ml-1">Nome completo</label>
                     <input 
                       required
                       type="text" 
@@ -302,6 +306,18 @@ export default function Home() {
                       placeholder="seu@email.com"
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text/40 ml-1">Telefone</label>
+                    <input 
+                      required
+                      type="tel" 
+                      className="w-full bg-brand-bg/50 px-5 py-4 rounded-2xl border border-brand-border focus:border-brand-accent outline-none transition-all font-medium text-sm"
+                      placeholder="(99) 99999-9999"
+                      value={formData.phone}
+                      onChange={e => setFormData({...formData, phone: e.target.value})}
                       disabled={loading}
                     />
                   </div>
