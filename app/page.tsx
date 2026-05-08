@@ -11,28 +11,52 @@ import {
   Users, 
   Plus, 
   CheckCircle2,
-  Send
+  Send,
+  Menu,
+  X
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 // Componentes internos
-const Navbar = () => (
-  <nav className="fixed top-0 w-full z-50 glass border-b border-white/5 px-6 py-4">
-    <div className="max-w-7xl mx-auto flex justify-between items-center">
-      <Link href="/" className="flex items-center gap-2">
-        <div className="w-10 h-10 bg-brand-accent rounded-lg flex items-center justify-center font-bold text-brand-bg text-xl">D</div>
-        <span className="text-xl font-bold tracking-tight text-brand-text">Data<span className="text-brand-accent">Lab</span></span>
-      </Link>
-      <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-        <Link href="/" className="hover:text-brand-accent transition-colors">Início</Link>
-        <Link href="#nucleos" className="hover:text-brand-accent transition-colors">Núcleos</Link>
-        <Link href="/posts" className="hover:text-brand-accent transition-colors">Blog</Link>
-        <Link href="/login" className="px-4 py-2 bg-brand-surface rounded-full border border-white/10 hover:border-brand-accent transition-all">Login</Link>
-      </div>
-    </div>
-  </nav>
-);
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <nav className="fixed top-0 w-full z-50 glass border-b border-white/5 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-brand-accent rounded-lg flex items-center justify-center font-bold text-brand-bg text-xl">D</div>
+            <span className="text-xl font-bold tracking-tight text-brand-text">Data<span className="text-brand-accent">Lab</span></span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <Link href="/" className="hover:text-brand-accent transition-colors">Início</Link>
+            <Link href="#nucleos" className="hover:text-brand-accent transition-colors">Núcleos</Link>
+            <Link href="/posts" className="hover:text-brand-accent transition-colors">Blog</Link>
+            <Link href="/login" className="px-4 py-2 bg-brand-surface rounded-full border border-white/10 hover:border-brand-accent transition-all">Login</Link>
+          </div>
+          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-brand-text">
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </nav>
+      {isOpen && (
+        <div className="fixed inset-0 bg-white/95 backdrop-blur-md z-40 flex flex-col items-center justify-center md:hidden">
+          <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-brand-text">
+            <X size={24} />
+          </button>
+          <div className="flex flex-col items-center gap-8 text-lg font-bold uppercase tracking-widest text-brand-text-dim">
+            <Link href="/" onClick={() => setIsOpen(false)} className="hover:text-brand-accent transition-colors">Início</Link>
+            <Link href="/#nucleos" onClick={() => setIsOpen(false)} className="hover:text-brand-accent transition-colors">Núcleos</Link>
+            <Link href="/posts" onClick={() => setIsOpen(false)} className="hover:text-brand-accent transition-colors">Blog</Link>
+            <Link href="/login" onClick={() => setIsOpen(false)} className="px-5 py-2 bg-brand-text text-white rounded-full hover:bg-brand-accent transition-all">Login</Link>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 const NucleoCard = ({ title, icon: Icon, description }: { title: string, icon: any, description: string }) => (
   <motion.div 
@@ -130,7 +154,7 @@ export default function Home() {
       </section>
 
       {/* Núcleos Section */}
-      <section id="nucleos" className="py-32 px-6">
+      <section id="nucleos" className="py-16 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap items-end justify-between gap-8 mb-16">
             <div className="space-y-4 max-w-xl">
@@ -189,7 +213,7 @@ export default function Home() {
       </section>
 
       {/* Participe Section */}
-      <section id="participe" className="py-32 px-6">
+      <section id="participe" className="py-16 md:py-32 px-6">
         <div className="max-w-6xl mx-auto bg-brand-text rounded-[3.5rem] p-10 md:p-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-accent/10 rounded-full blur-[100px]" />
           

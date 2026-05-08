@@ -21,7 +21,8 @@ import {
   Image as ImageIcon,
   Upload,
   X,
-  Loader2
+  Loader2,
+  Menu
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -40,6 +41,7 @@ export default function ManagementPage() {
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Post states
   const [postTitle, setPostTitle] = useState('');
@@ -223,6 +225,9 @@ export default function ManagementPage() {
               Operational Center
             </div>
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-none border-l-8 border-brand-accent pl-8">{activeTab} View.</h2>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden mt-4 text-brand-text">
+              <Menu size={24} />
+            </button>
           </div>
           <div className="flex gap-4">
              <div className="white-card px-6 py-4 rounded-2xl border border-brand-border flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-dim bg-white shadow-xl">
@@ -230,6 +235,41 @@ export default function ManagementPage() {
              </div>
           </div>
         </header>
+
+        {menuOpen && (
+          <div className="fixed inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center lg:hidden">
+            <button onClick={() => setMenuOpen(false)} className="absolute top-6 right-6 text-brand-text">
+              <X size={24} />
+            </button>
+            <nav className="space-y-4">
+              {[
+                { id: 'dashboard', label: 'Overview', icon: BarChart3 },
+                { id: 'posts', label: 'Journal', icon: FileText },
+                { id: 'members', label: 'Network', icon: Users },
+                { id: 'settings', label: 'System', icon: Settings },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setMenuOpen(false); }}
+                  className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all font-bold text-lg uppercase tracking-widest ${
+                    activeTab === item.id 
+                      ? 'bg-brand-text text-white shadow-xl' 
+                      : 'text-brand-text-dim hover:bg-brand-bg hover:text-brand-text'
+                  }`}
+                >
+                  <item.icon size={24} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <button 
+              onClick={() => { setShowNewPostModal(true); setMenuOpen(false); }}
+              className="mt-8 px-8 py-4 bg-brand-accent text-white font-black rounded-2xl flex items-center gap-3"
+            >
+              <Plus size={20} /> Create Post
+            </button>
+          </div>
+        )}
 
         {activeTab === 'dashboard' && (
           <div className="space-y-16">
@@ -283,8 +323,8 @@ export default function ManagementPage() {
                </button>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-brand-border overflow-hidden shadow-sm p-4">
-               <table className="w-full text-left font-bold">
+            <div className="bg-white rounded-[2.5rem] border border-brand-border shadow-sm p-4 overflow-x-auto">
+               <table className="w-full text-left font-bold min-w-[600px]">
                  <thead>
                     <tr className="border-b border-brand-border/50">
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Post Title</th>
@@ -371,8 +411,8 @@ export default function ManagementPage() {
                <button onClick={() => setShowExportModal(true)} className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Export Data</button>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-brand-border overflow-hidden shadow-sm p-4">
-               <table className="w-full text-left">
+            <div className="bg-white rounded-[2.5rem] border border-brand-border shadow-sm p-4 overflow-x-auto">
+               <table className="w-full text-left min-w-[600px]">
                  <thead>
                     <tr>
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Name</th>

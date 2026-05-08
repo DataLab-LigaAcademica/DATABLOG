@@ -83,7 +83,7 @@ export default function PostDetail() {
     <div className="min-h-screen bg-brand-bg flex flex-col">
       <Navbar />
 
-      <main className="flex-1 pt-48 pb-24 px-6 text-brand-text">
+      <main className="flex-1 pt-32 md:pt-48 pb-24 px-6 text-brand-text">
         <article className="max-w-4xl mx-auto space-y-16">
           {/* Header */}
           <header className="space-y-10">
