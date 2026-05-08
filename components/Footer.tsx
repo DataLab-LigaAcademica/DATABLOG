@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export const Footer = () => (
   <footer className="py-12 px-6 border-t border-white/5 bg-brand-bg">
-    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-brand-accent rounded-md flex items-center justify-center font-bold text-brand-bg">D</div>
         <span className="text-lg font-bold">DataLab</span>

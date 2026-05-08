@@ -237,11 +237,16 @@ export default function ManagementPage() {
         </header>
 
         {menuOpen && (
-          <div className="fixed inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center lg:hidden">
-            <button onClick={() => setMenuOpen(false)} className="absolute top-6 right-6 text-brand-text">
-              <X size={24} />
-            </button>
-            <nav className="space-y-4">
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed top-0 left-0 h-full w-4/5 max-w-sm bg-white z-50 flex flex-col lg:hidden shadow-2xl overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-brand-border sticky top-0 bg-white">
+              <h2 className="font-bold text-brand-text">Menu</h2>
+              <button onClick={() => setMenuOpen(false)} className="text-brand-text">
+                <X size={24} />
+              </button>
+            </div>
+            <nav className="flex-1 p-6 space-y-2">
               {[
                 { id: 'dashboard', label: 'Overview', icon: BarChart3 },
                 { id: 'posts', label: 'Journal', icon: FileText },
@@ -251,24 +256,27 @@ export default function ManagementPage() {
                 <button
                   key={item.id}
                   onClick={() => { setActiveTab(item.id); setMenuOpen(false); }}
-                  className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all font-bold text-lg uppercase tracking-widest ${
+                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all font-bold text-sm uppercase tracking-widest ${
                     activeTab === item.id 
                       ? 'bg-brand-text text-white shadow-xl' 
                       : 'text-brand-text-dim hover:bg-brand-bg hover:text-brand-text'
                   }`}
                 >
-                  <item.icon size={24} />
+                  <item.icon size={20} />
                   {item.label}
                 </button>
               ))}
             </nav>
-            <button 
-              onClick={() => { setShowNewPostModal(true); setMenuOpen(false); }}
-              className="mt-8 px-8 py-4 bg-brand-accent text-white font-black rounded-2xl flex items-center gap-3"
-            >
-              <Plus size={20} /> Create Post
-            </button>
+            <div className="p-6 border-t border-brand-border space-y-4">
+              <button 
+                onClick={() => { setShowNewPostModal(true); setMenuOpen(false); }}
+                className="w-full px-6 py-3 bg-brand-accent text-white font-black rounded-xl flex items-center justify-center gap-2 text-sm uppercase tracking-widest hover:shadow-lg transition-all"
+              >
+                <Plus size={18} /> Create
+              </button>
+            </div>
           </div>
+        </>
         )}
 
         {activeTab === 'dashboard' && (

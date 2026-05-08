@@ -10,9 +10,14 @@
 }
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
+
   body {
     background-color: var(--color-brand-bg);
     color: var(--color-brand-text);
+    overflow-x: hidden;
   }
 
   img {

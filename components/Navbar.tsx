@@ -27,17 +27,33 @@ export const Navbar = () => {
         </nav>
       </header>
       {isOpen && (
-        <div className="fixed inset-0 bg-white/95 backdrop-blur-md z-40 flex flex-col items-center justify-center md:hidden">
-          <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-brand-text">
-            <X size={24} />
-          </button>
-          <div className="flex flex-col items-center gap-8 text-lg font-bold uppercase tracking-widest text-brand-text-dim">
-            <Link href="/" onClick={() => setIsOpen(false)} className="hover:text-brand-accent transition-colors">Início</Link>
-            <Link href="/#nucleos" onClick={() => setIsOpen(false)} className="hover:text-brand-accent transition-colors">Núcleos</Link>
-            <Link href="/posts" onClick={() => setIsOpen(false)} className="hover:text-brand-accent transition-colors">Blog</Link>
-            <Link href="/login" onClick={() => setIsOpen(false)} className="px-5 py-2 bg-brand-text text-white rounded-full hover:bg-brand-accent transition-all">Login</Link>
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={() => setIsOpen(false)} />
+          <div className="fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white z-50 flex flex-col md:hidden transform transition-transform duration-300">
+            <div className="flex justify-between items-center p-6 border-b border-brand-border">
+              <h2 className="font-bold text-brand-text">Menu</h2>
+              <button onClick={() => setIsOpen(false)} className="text-brand-text">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex flex-col gap-0 flex-1 p-6">
+              <Link href="/" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+                Início
+              </Link>
+              <Link href="/#nucleos" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+                Núcleos
+              </Link>
+              <Link href="/posts" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+                Blog
+              </Link>
+            </div>
+            <div className="p-6 border-t border-brand-border">
+              <Link href="/login" onClick={() => setIsOpen(false)} className="w-full px-5 py-3 bg-brand-text text-white rounded-xl hover:bg-brand-accent transition-all font-bold text-center text-sm uppercase tracking-widest block">
+                Login
+              </Link>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
