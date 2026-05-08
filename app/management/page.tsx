@@ -22,7 +22,8 @@ import {
   Upload,
   X,
   Loader2,
-  Menu
+  Menu,
+  UserPlus
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -54,6 +55,8 @@ export default function ManagementPage() {
   // List states
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
 
   const fetchPosts = async () => {
     setLoadingPosts(true);
@@ -72,9 +75,28 @@ export default function ManagementPage() {
     }
   };
 
+  const fetchApplications = async () => {
+    setLoadingApplications(true);
+    try {
+      const { data, error } = await supabase
+        .from('candidaturas')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setApplications(data || []);
+    } catch (err: any) {
+      console.error('Erro ao buscar candidaturas:', err.message || err);
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
   React.useEffect(() => {
     if (activeTab === 'posts') {
       fetchPosts();
+    } else if (activeTab === 'applications') {
+      fetchApplications();
     }
   }, [activeTab]);
 
@@ -178,7 +200,7 @@ export default function ManagementPage() {
           {[
             { id: 'dashboard', label: 'Overview', icon: BarChart3 },
             { id: 'posts', label: 'Journal', icon: FileText },
-            { id: 'members', label: 'Network', icon: Users },
+            { id: 'applications', label: 'Applications', icon: UserPlus },
             { id: 'settings', label: 'System', icon: Settings },
           ].map((item) => (
             <button
@@ -250,7 +272,7 @@ export default function ManagementPage() {
               {[
                 { id: 'dashboard', label: 'Overview', icon: BarChart3 },
                 { id: 'posts', label: 'Journal', icon: FileText },
-                { id: 'members', label: 'Network', icon: Users },
+                { id: 'applications', label: 'Applications', icon: UserPlus },
                 { id: 'settings', label: 'System', icon: Settings },
               ].map((item) => (
                 <button
@@ -403,38 +425,86 @@ export default function ManagementPage() {
           </div>
         )}
 
-        {/* Member and Settings tabs updated for light mode */}
-        {activeTab === 'members' && (
-          <div className="space-y-10 max-w-5xl">
+        {activeTab === 'applications' && (
+          <div className="space-y-10">
             <div className="bg-white rounded-[2.5rem] border border-brand-border p-10 flex justify-between items-center shadow-sm">
                <div className="flex items-center gap-8">
-                  <div className="w-20 h-20 bg-brand-text rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl">
-                    <Users size={36} />
+                  <div className="w-20 h-20 bg-brand-accent/10 rounded-[1.5rem] flex items-center justify-center text-brand-accent shadow-xl">
+                    <UserPlus size={36} />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black tracking-tight">Active Queue</h3>
-                    <p className="text-sm font-bold text-brand-text-dim mt-1 uppercase tracking-widest">Prospect management pool</p>
+                    <h3 className="text-3xl font-black tracking-tight">Applications</h3>
+                    <p className="text-sm font-bold text-brand-text-dim mt-1 uppercase tracking-widest">Candidature Management System</p>
                   </div>
                </div>
-               <button onClick={() => setShowExportModal(true)} className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Export Data</button>
+               <div className="text-right">
+                 <p className="text-2xl font-black text-brand-text">{applications.length}</p>
+                 <p className="text-xs font-bold text-brand-text-dim uppercase tracking-widest">Total Applications</p>
+               </div>
             </div>
 
             <div className="bg-white rounded-[2.5rem] border border-brand-border shadow-sm p-4 overflow-x-auto">
-               <table className="w-full text-left min-w-[600px]">
+               <table className="w-full text-left font-bold min-w-[600px]">
                  <thead>
-                    <tr>
+                    <tr className="border-b border-brand-border/50">
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Name</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Identity</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Field</th>
-                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30 text-right">Timestamp</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Email</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Area</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Status</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Applied At</th>
                     </tr>
                  </thead>
                  <tbody>
-                    <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center">
-                        <p className="text-brand-text-dim text-lg font-medium">Nenhum membro no momento.</p>
-                      </td>
-                    </tr>
+                    {loadingApplications ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center">
+                          <Loader2 className="animate-spin mx-auto text-brand-accent mb-4" size={32} />
+                          <p className="text-brand-text-dim text-sm font-bold uppercase tracking-widest">Carregando candidaturas...</p>
+                        </td>
+                      </tr>
+                    ) : applications.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-brand-text-dim">
+                          Nenhuma candidatura recebida ainda.
+                        </td>
+                      </tr>
+                    ) : (
+                      applications.map((app) => (
+                        <tr key={app.id} className="group hover:bg-brand-bg/50 transition-colors border-b border-brand-border/30 last:border-0 text-sm">
+                          <td className="px-6 py-6">
+                            <p className="font-black text-brand-text tracking-tight">{app.name}</p>
+                          </td>
+                          <td className="px-6 py-6">
+                            <p className="text-brand-text-dim">{app.email}</p>
+                          </td>
+                          <td className="px-6 py-6">
+                            <span className="px-3 py-1 bg-brand-accent/10 rounded-full text-xs font-bold text-brand-accent uppercase tracking-widest">
+                              {app.area === 'ia' ? 'IA' : app.area === 'eng' ? 'Engenharia' : app.area === 'ds' ? 'Data Science' : app.area === 'vis' ? 'Visão' : app.area}
+                            </span>
+                          </td>
+                          <td className="px-6 py-6">
+                            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              app.status === 'approved' 
+                                ? 'bg-green-100 text-green-700' 
+                                : app.status === 'rejected'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {app.status === 'approved' ? (
+                                <><CheckCircle2 size={12} /> Approved</>
+                              ) : app.status === 'rejected' ? (
+                                <><XCircle size={12} /> Rejected</>
+                              ) : (
+                                <><Clock size={12} /> Pending</>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-6 py-6 text-xs text-brand-text-dim">
+                            {new Date(app.created_at).toLocaleDateString('pt-BR')}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                  </tbody>
                </table>
             </div>

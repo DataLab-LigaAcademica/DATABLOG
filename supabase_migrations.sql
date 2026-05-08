@@ -24,7 +24,18 @@ CREATE TABLE site.posts (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Members (Public Submission Form)
+-- 4. Candidaturas Table (Application Form Submissions)
+CREATE TABLE site.candidaturas (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    area TEXT NOT NULL,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Members (Public Submission Form)
 CREATE TABLE site.members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -50,6 +61,7 @@ CREATE TABLE site.post_tags (
 -- 7. ENABLE RLS (Row Level Security)
 ALTER TABLE site.authors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site.candidaturas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site.members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site.tags ENABLE ROW LEVEL SECURITY;
 
@@ -59,9 +71,13 @@ ALTER TABLE site.tags ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can read published posts" ON site.posts
     FOR SELECT USING (published = true);
 
--- Member form is insert-only for public
-CREATE POLICY "Public can submit member form" ON site.members
+-- Public can submit application form
+CREATE POLICY "Public can submit application" ON site.candidaturas
     FOR INSERT WITH CHECK (true);
+
+-- Admins can read and manage applications
+CREATE POLICY "Admins can manage applications" ON site.candidaturas
+    FOR ALL USING (auth.role() = 'authenticated');
 
 -- Admins (authenticated users) can manage posts
 CREATE POLICY "Admins can manage any post" ON site.posts

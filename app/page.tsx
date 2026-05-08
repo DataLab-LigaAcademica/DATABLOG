@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Send,
   Menu,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -90,11 +91,34 @@ const NucleoCard = ({ title, icon: Icon, description }: { title: string, icon: a
 export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', area: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Inscrição enviada:', formData);
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/candidaturas/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao enviar candidatura');
+      }
+
+      setSubmitted(true);
+      setFormData({ name: '', email: '', area: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -266,6 +290,7 @@ export default function Home() {
                       placeholder="Nome completo"
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -277,6 +302,7 @@ export default function Home() {
                       placeholder="seu@email.com"
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -286,6 +312,7 @@ export default function Home() {
                       className="w-full bg-brand-bg/50 px-5 py-4 rounded-2xl border border-brand-border focus:border-brand-accent outline-none transition-all font-medium text-sm appearance-none"
                       value={formData.area}
                       onChange={e => setFormData({...formData, area: e.target.value})}
+                      disabled={loading}
                     >
                       <option value="">Selecione a área</option>
                       <option value="ia">Inteligência Artificial</option>
@@ -294,8 +321,28 @@ export default function Home() {
                       <option value="vis">Visão Computacional</option>
                     </select>
                   </div>
-                  <button className="w-full py-5 bg-brand-text text-white font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-brand-accent transition-all mt-4 group">
-                    Enviar Candidatura <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm font-medium"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+
+                  <button className="w-full py-5 bg-brand-text text-white font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-brand-accent transition-all mt-4 group disabled:opacity-50 disabled:cursor-not-allowed">
+                    {loading ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        Enviar Candidatura <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                      </>
+                    )}
                   </button>
                 </form>
               ) : (
@@ -307,15 +354,15 @@ export default function Home() {
                   <div className="w-20 h-20 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center">
                     <CheckCircle2 size={40} />
                   </div>
-                  <div className="text-center">
-                    <h3 className="text-2xl font-black text-brand-text">Check!</h3>
-                    <p className="text-brand-text-dim mt-2 font-medium">Seu processo começou. Fique atento.</p>
+                  <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-black text-brand-text">Candidatura Enviada!</h3>
+                    <p className="text-brand-text-dim text-sm">Obrigado por seu interesse. Entraremos em contato em breve.</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setSubmitted(false)}
-                    className="text-brand-accent text-sm font-black uppercase tracking-widest hover:underline"
+                    className="px-6 py-3 bg-brand-accent text-white font-bold rounded-xl hover:bg-brand-text transition-all"
                   >
-                    Novo Envio
+                    Enviar Outra Candidatura
                   </button>
                 </motion.div>
               )}
