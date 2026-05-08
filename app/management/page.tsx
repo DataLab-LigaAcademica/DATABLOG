@@ -21,7 +21,8 @@ import {
   Image as ImageIcon,
   Upload,
   X,
-  Loader2
+  Loader2,
+  Menu
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -40,6 +41,7 @@ export default function ManagementPage() {
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Post states
   const [postTitle, setPostTitle] = useState('');
@@ -223,6 +225,9 @@ export default function ManagementPage() {
               Operational Center
             </div>
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-none border-l-8 border-brand-accent pl-8">{activeTab} View.</h2>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden mt-4 text-brand-text">
+              <Menu size={24} />
+            </button>
           </div>
           <div className="flex gap-4">
              <div className="white-card px-6 py-4 rounded-2xl border border-brand-border flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-dim bg-white shadow-xl">
@@ -230,6 +235,49 @@ export default function ManagementPage() {
              </div>
           </div>
         </header>
+
+        {menuOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed top-0 left-0 h-full w-4/5 max-w-sm bg-white z-50 flex flex-col lg:hidden shadow-2xl overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-brand-border sticky top-0 bg-white">
+              <h2 className="font-bold text-brand-text">Menu</h2>
+              <button onClick={() => setMenuOpen(false)} className="text-brand-text">
+                <X size={24} />
+              </button>
+            </div>
+            <nav className="flex-1 p-6 space-y-2">
+              {[
+                { id: 'dashboard', label: 'Overview', icon: BarChart3 },
+                { id: 'posts', label: 'Journal', icon: FileText },
+                { id: 'members', label: 'Network', icon: Users },
+                { id: 'settings', label: 'System', icon: Settings },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setMenuOpen(false); }}
+                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all font-bold text-sm uppercase tracking-widest ${
+                    activeTab === item.id 
+                      ? 'bg-brand-text text-white shadow-xl' 
+                      : 'text-brand-text-dim hover:bg-brand-bg hover:text-brand-text'
+                  }`}
+                >
+                  <item.icon size={20} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <div className="p-6 border-t border-brand-border space-y-4">
+              <button 
+                onClick={() => { setShowNewPostModal(true); setMenuOpen(false); }}
+                className="w-full px-6 py-3 bg-brand-accent text-white font-black rounded-xl flex items-center justify-center gap-2 text-sm uppercase tracking-widest hover:shadow-lg transition-all"
+              >
+                <Plus size={18} /> Create
+              </button>
+            </div>
+          </div>
+        </>
+        )}
 
         {activeTab === 'dashboard' && (
           <div className="space-y-16">
@@ -283,8 +331,8 @@ export default function ManagementPage() {
                </button>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-brand-border overflow-hidden shadow-sm p-4">
-               <table className="w-full text-left font-bold">
+            <div className="bg-white rounded-[2.5rem] border border-brand-border shadow-sm p-4 overflow-x-auto">
+               <table className="w-full text-left font-bold min-w-[600px]">
                  <thead>
                     <tr className="border-b border-brand-border/50">
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Post Title</th>
@@ -371,8 +419,8 @@ export default function ManagementPage() {
                <button onClick={() => setShowExportModal(true)} className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all">Export Data</button>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-brand-border overflow-hidden shadow-sm p-4">
-               <table className="w-full text-left">
+            <div className="bg-white rounded-[2.5rem] border border-brand-border shadow-sm p-4 overflow-x-auto">
+               <table className="w-full text-left min-w-[600px]">
                  <thead>
                     <tr>
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Name</th>

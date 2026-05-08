@@ -54,7 +54,7 @@ export default function BlogListing() {
     <div className="min-h-screen bg-brand-bg flex flex-col">
       <Navbar />
       
-      <main className="flex-1 pt-40 pb-24 px-6 text-brand-text">
+      <main className="flex-1 pt-24 md:pt-40 pb-24 px-6 text-brand-text">
         <div className="max-w-7xl mx-auto space-y-16">
           <header className="space-y-6 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-accent/10 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-accent">
