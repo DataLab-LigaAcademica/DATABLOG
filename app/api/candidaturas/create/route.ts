@@ -6,11 +6,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY! || process.env
 
 export async function POST(request: Request) {
   try {
-    const { name, email, area } = await request.json();
+    const { name, email, phone, area } = await request.json();
 
-    if (!name || !email || !area) {
+    if (!name || !email || !phone || !area) {
       return NextResponse.json(
-        { error: 'Nome, email e área são obrigatórios' },
+        { error: 'Nome, email, telefone e área são obrigatórios' },
         { status: 400 }
       );
     }
@@ -24,12 +24,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validar telefone
+    const phoneRegex = /^[0-9()+\s-]{8,20}$/;
+    if (!phoneRegex.test(phone)) {
+      return NextResponse.json(
+        { error: 'Telefone inválido' },
+        { status: 400 }
+      );
+    }
+
     // Initialize Supabase with service role key if available to bypass RLS, and correct schema
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       db: { schema: 'site' }
     });
 
-    console.log('[CANDIDATURAS] Iniciando criação:', { name, email, area });
+    console.log('[CANDIDATURAS] Iniciando criação:', { name, email, phone, area });
 
     // Inserir candidatura
     const { data, error } = await supabase
@@ -38,6 +47,7 @@ export async function POST(request: Request) {
         {
           name: name.trim(),
           email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           area: area,
           created_at: new Date().toISOString(),
           status: 'pending'

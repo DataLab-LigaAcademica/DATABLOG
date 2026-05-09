@@ -16,8 +16,9 @@ export const Navbar = () => {
             <span className="text-lg font-bold tracking-tight text-brand-text">Data<span className="text-brand-accent">Lab</span></span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-brand-text-dim">
+            <Link href="/" className="hover:text-brand-accent transition-colors">Mini-cursos</Link>
             <Link href="/" className="hover:text-brand-accent transition-colors">Início</Link>
-            <Link href="/#nucleos" className="hover:text-brand-accent transition-colors">Núcleos</Link>
+            <a href="/#nucleos" className="hover:text-brand-accent transition-colors">Núcleos</a>
             <Link href="/posts" className="hover:text-brand-accent transition-colors">Blog</Link>
             <Link href="/login" className="px-5 py-2 bg-brand-text text-white rounded-full hover:bg-brand-accent transition-all">Login</Link>
           </div>
@@ -38,11 +39,14 @@ export const Navbar = () => {
             </div>
             <div className="flex flex-col gap-0 flex-1 p-6">
               <Link href="/" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+                Mini-cursos
+              </Link>
+              <Link href="/" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
                 Início
               </Link>
-              <Link href="/#nucleos" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
+              <a href="/#nucleos" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
                 Núcleos
-              </Link>
+              </a>
               <Link href="/posts" onClick={() => setIsOpen(false)} className="px-4 py-4 text-brand-text font-bold uppercase tracking-widest text-sm hover:bg-brand-bg hover:text-brand-accent transition-colors rounded-xl">
                 Blog
               </Link>
