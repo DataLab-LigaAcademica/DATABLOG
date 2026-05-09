@@ -449,6 +449,7 @@ export default function ManagementPage() {
                     <tr className="border-b border-brand-border/50">
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Name</th>
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Email</th>
+                      <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Telefone</th>
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Area</th>
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Status</th>
                       <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-brand-text/30">Applied At</th>
@@ -476,6 +477,9 @@ export default function ManagementPage() {
                           </td>
                           <td className="px-6 py-6">
                             <p className="text-brand-text-dim">{app.email}</p>
+                          </td>
+                          <td className="px-6 py-6">
+                            <p className="text-brand-text-dim">{app.phone}</p>
                           </td>
                           <td className="px-6 py-6">
                             <span className="px-3 py-1 bg-brand-accent/10 rounded-full text-xs font-bold text-brand-accent uppercase tracking-widest">
