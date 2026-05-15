@@ -52,13 +52,18 @@ export default function ManagementPage() {
   const [submitting, setSubmitting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
 
+  // Edit/Delete states
+  const [editingPost, setEditingPost] = useState<any | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<any | null>(null);
+
   // List states
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [applications, setApplications] = useState<any[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(false);
 
-  const fetchPosts = async () => {
+  const fetchPosts = React.useCallback(async () => {
     setLoadingPosts(true);
     try {
       const { data, error } = await supabase
@@ -73,9 +78,9 @@ export default function ManagementPage() {
     } finally {
       setLoadingPosts(false);
     }
-  };
+  }, []);
 
-  const fetchApplications = async () => {
+  const fetchApplications = React.useCallback(async () => {
     setLoadingApplications(true);
     try {
       const { data, error } = await supabase
@@ -90,15 +95,17 @@ export default function ManagementPage() {
     } finally {
       setLoadingApplications(false);
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     if (activeTab === 'posts') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPosts();
     } else if (activeTab === 'applications') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchApplications();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchPosts, fetchApplications]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -117,7 +124,47 @@ export default function ManagementPage() {
     }
   };
 
-  const handleCreatePost = async (status: 'published' | 'draft') => {
+  const handleEditClick = (post: any) => {
+    setEditingPost(post);
+    setPostTitle(post.title);
+    setPostContent(post.content);
+    setImagePreview(post.image_url);
+    setShowNewPostModal(true);
+  };
+
+  const handleDeleteClick = (post: any) => {
+    setPostToDelete(post);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!postToDelete) return;
+    
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/posts/delete?id=${postToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erro ao excluir postagem');
+      }
+
+      setShowDeleteConfirm(false);
+      setPostToDelete(null);
+      fetchPosts();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitPost = async (status: 'published' | 'draft') => {
     if (!postTitle || !postContent) {
       setPostError('Por favor, preencha o título e o conteúdo.');
       return;
@@ -127,12 +174,12 @@ export default function ManagementPage() {
     setPostError(null);
 
     try {
-      let imageUrl = null;
+      let imageUrl = imagePreview; // Re-use image if just editing
 
       // 0. Get session for auth
       const { data: { session } } = await supabase.auth.getSession();
 
-      // 1. Upload image if exists
+      // 1. Upload image if a new file exists
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -151,14 +198,18 @@ export default function ManagementPage() {
         imageUrl = publicUrl;
       }
 
-      // 2. Create post
-      const response = await fetch('/api/posts/create', {
-        method: 'POST',
+      // 2. Create or Update post
+      const endpoint = editingPost ? '/api/posts/update' : '/api/posts/create';
+      const method = editingPost ? 'PUT' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
         headers: { 
           'Content-Type': 'application/json',
           ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
         },
         body: JSON.stringify({ 
+          id: editingPost?.id,
           title: postTitle, 
           content: postContent,
           image_url: imageUrl,
@@ -169,7 +220,7 @@ export default function ManagementPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar postagem');
+        throw new Error(data.error || 'Erro ao processar postagem');
       }
 
       // Success
@@ -178,7 +229,8 @@ export default function ManagementPage() {
       setImageFile(null);
       setImagePreview(null);
       setShowNewPostModal(false);
-      fetchPosts(); // Atualiza a lista após criar
+      setEditingPost(null);
+      fetchPosts(); // Atualiza a lista após criar/editar
       setShowSuccessModal(true);
     } catch (err) {
       setPostError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
@@ -220,7 +272,14 @@ export default function ManagementPage() {
 
         <div className="pt-8 border-t border-brand-border space-y-6">
           <button 
-            onClick={() => setShowNewPostModal(true)}
+            onClick={() => {
+              setEditingPost(null);
+              setPostTitle('');
+              setPostContent('');
+              setImageFile(null);
+              setImagePreview(null);
+              setShowNewPostModal(true);
+            }}
             className="w-full py-5 bg-brand-accent text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:shadow-2xl transition-all"
           >
             <Plus size={20} /> Create Post
@@ -291,7 +350,15 @@ export default function ManagementPage() {
             </nav>
             <div className="p-6 border-t border-brand-border space-y-4">
               <button 
-                onClick={() => { setShowNewPostModal(true); setMenuOpen(false); }}
+                onClick={() => {
+                  setEditingPost(null);
+                  setPostTitle('');
+                  setPostContent('');
+                  setImageFile(null);
+                  setImagePreview(null);
+                  setShowNewPostModal(true); 
+                  setMenuOpen(false); 
+                }}
                 className="w-full px-6 py-3 bg-brand-accent text-white font-black rounded-xl flex items-center justify-center gap-2 text-sm uppercase tracking-widest hover:shadow-lg transition-all"
               >
                 <Plus size={18} /> Create
@@ -346,7 +413,14 @@ export default function ManagementPage() {
                   </div>
                </div>
                <button 
-                onClick={() => setShowNewPostModal(true)} 
+                onClick={() => {
+                  setEditingPost(null);
+                  setPostTitle('');
+                  setPostContent('');
+                  setImageFile(null);
+                  setImagePreview(null);
+                  setShowNewPostModal(true);
+                }} 
                 className="px-10 py-5 bg-brand-text text-white font-black rounded-2xl hover:bg-brand-accent transition-all flex items-center gap-2"
                >
                 <Plus size={20} /> Create New
@@ -408,10 +482,16 @@ export default function ManagementPage() {
                           </td>
                           <td className="px-6 py-6 text-right">
                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button className="p-2 hover:bg-white rounded-lg text-brand-text-dim hover:text-brand-accent transition-all shadow-sm">
+                              <button 
+                                onClick={() => handleEditClick(post)}
+                                className="p-2 hover:bg-white rounded-lg text-brand-text-dim hover:text-brand-accent transition-all shadow-sm"
+                              >
                                 <Edit2 size={16} />
                               </button>
-                              <button className="p-2 hover:bg-white rounded-lg text-brand-text-dim hover:text-red-500 transition-all shadow-sm">
+                              <button 
+                                onClick={() => handleDeleteClick(post)}
+                                className="p-2 hover:bg-white rounded-lg text-brand-text-dim hover:text-red-500 transition-all shadow-sm"
+                              >
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -557,11 +637,12 @@ export default function ManagementPage() {
               <div className="absolute top-0 right-0 w-48 h-48 bg-brand-accent/5 rounded-full blur-3xl" />
               
               <div className="flex justify-between items-center mb-12">
-                <h3 className="text-4xl font-black tracking-tighter">Draft Insight.</h3>
+                <h3 className="text-4xl font-black tracking-tighter">{editingPost ? 'Edit Entry.' : 'Draft Insight.'}</h3>
                 <button 
                   onClick={() => {
                     setShowNewPostModal(false);
                     setPostError(null);
+                    setEditingPost(null);
                   }} 
                   className="w-12 h-12 bg-brand-bg rounded-full flex items-center justify-center text-brand-text hover:bg-brand-accent hover:text-white transition-all"
                 >
@@ -629,18 +710,18 @@ export default function ManagementPage() {
 
                  <div className="flex gap-4 pt-4">
                     <button 
-                      onClick={() => handleCreatePost('published')}
+                      onClick={() => handleSubmitPost('published')}
                       disabled={submitting}
                       className="flex-1 py-5 bg-brand-text text-white font-black rounded-2xl shadow-xl shadow-brand-text/20 hover:bg-brand-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {submitting ? 'Aguarde...' : 'Deploy to Journal'}
+                      {submitting ? 'Aguarde...' : editingPost ? 'Update Entry' : 'Deploy to Journal'}
                     </button>
                     <button 
-                      onClick={() => handleCreatePost('draft')}
+                      onClick={() => handleSubmitPost('draft')}
                       disabled={submitting}
                       className="px-10 py-5 bg-white border border-brand-border text-brand-text font-black rounded-2xl hover:border-brand-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {submitting ? '...' : 'Save as Draft'}
+                      {submitting ? '...' : editingPost ? 'Save Draft' : 'Save as Draft'}
                     </button>
                  </div>
               </div>
@@ -752,7 +833,7 @@ export default function ManagementPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[3rem] p-12 shadow-2xl border border-brand-border text-center overflow-hidden"
+              className="relative w-full max-md bg-white rounded-[3rem] p-12 shadow-2xl border border-brand-border text-center overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl" />
               
@@ -772,6 +853,52 @@ export default function ManagementPage() {
                 >
                   Continuar
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteConfirm(false)}
+              className="absolute inset-0 bg-brand-text/40 backdrop-blur-md" 
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[3rem] p-12 shadow-2xl border border-brand-border text-center overflow-hidden"
+            >
+              <div className="relative z-10 space-y-6">
+                <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <Trash2 size={40} />
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black tracking-tight text-brand-text">Tem certeza?</h3>
+                  <p className="text-brand-text-dim font-medium">Você está prestes a excluir permanentemente esta postagem. Esta ação não pode ser desfeita.</p>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={confirmDelete}
+                    disabled={submitting}
+                    className="w-full py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all shadow-xl shadow-red-600/10 disabled:opacity-50"
+                  >
+                    {submitting ? 'Excluindo...' : 'Sim, Excluir'}
+                  </button>
+                  <button 
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="w-full py-4 bg-brand-bg text-brand-text font-black rounded-2xl hover:bg-brand-border transition-all"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
